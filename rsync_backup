@@ -1,0 +1,110 @@
+#! /bin/bash
+
+die () {
+    echo "ERROR: Interval specified twice. Aborting." >&2
+    exit 1
+}
+
+usage() {
+    echo "Do you know how this works?" >&2
+}
+
+#------------------------------------------------------------------------------
+# Set variables
+OPTS=`getopt -o HDWMQYhs:d: \
+     --long hourly,daily,weekly,monthly,quarterly,yearly,src:,dst:,max:,help \
+     -n 'parse-options' -- "$@"`
+
+eval set -- "$OPTS"
+
+TODAY=$(date +%Y-%m-%d)
+NOW=$(date +%Y-%m-%dT%H%M%S)
+
+while true; do
+    case "$1" in
+        -H|--hourly) [ ! -z ${DT+x} ] && die
+            [ -z ${MAX+x} ] && MAX=24
+            DT=$NOW
+            INC='hour'
+            shift ;;
+        -D|--daily) [ ! -z ${DT+x} ] && die
+            [ -z ${MAX+x} ] && MAX=7
+            DT=$TODAY            
+            INC='day'
+            shift ;;
+        -W|--weekly) [ ! -z ${DT+x} ] && die
+            [ -z ${MAX+x} ] && MAX=4
+            DT=$TODAY
+            INC='week'
+            shift ;;
+        -M|--monthly) [ ! -z ${DT+x} ] && die
+            [ -z ${MAX+x} ] && MAX=12
+            DT=$TODAY
+            INC='month'
+            shift ;;
+        -Q|--quarterly) [ ! -z ${DT+x} ] && die
+            [ -z ${MAX+x} ] && MAX=4
+            DT=$TODAY
+            INC='quarter'
+            shift ;;
+        -Y|--yearly) [ ! -z ${DT+x} ] && die
+            [ -z ${MAX+x} ] && MAX=5
+            DT=$TODAY
+            INC='year'
+            shift ;;
+        -s|--src) SRC_DIR="$2"; shift; shift ;;
+        -d|--dst) BKP_DIR="$2"; shift; shift ;;
+        -h|--help) usage; exit;; 
+        --max) MAX="$2"; shift; shift ;;
+        -- ) shift; break ;;
+        *) break ;;
+
+    esac
+done
+
+if [[ -z ${INC+x} ]]; then
+    echo "Must specify increment."
+    exit
+fi
+
+# Check for missing diectory arguments
+if [[ -z ${SRC_DIR+x} ]] || [[ -z ${BKP_DIR+x} ]]; then
+    echo "Source and destination directories must be specified."
+    echo "SRC directory: $SRC_DIR"
+    echo "DST directory: $BKP_DIR"
+    exit
+fi
+
+
+#i------------------------------------------------------------------------------
+# Backup Script
+mkdir -p "$BKP_DIR"
+
+# Get list of current backup folders and count them
+FOLDERS=($(find "$BKP_DIR" -type d -name "$INC*"))
+NUM=${#FOLDERS[@]}
+echo "There are currently" $NUM "backups"
+
+# Copy (using hardlinks) the latest backup into todays backup
+if [ $NUM -gt 0 ]; then
+    echo "Copy" ${FOLDERS[$[$NUM-1]]} "-->" "$BKP_DIR"/$INC.$DT
+    cp -al ${FOLDERS[$[$NUM-1]]} "$BKP_DIR"/$INC.$DT
+fi
+
+mkdir -p "$BKP_DIR"/$INC.$DT
+
+# rsync into todays backup
+echo "rsync -av --delete" $SRC_DIR/ "$BKP_DIR"/$INC.$DT
+rsync -av --delete $SRC_DIR/ "$BKP_DIR"/$INC.$DT
+
+# Keep the most recent MAX backups and delete the rest
+if [ $(($NUM+1)) -gt $MAX ]; then
+    echo "Cleanup old backups..."
+    for i in `seq 0 $[$NUM-$MAX]`; do
+        echo "removing backup:" ${FOLDERS[$i]}
+        rm -r ${FOLDERS[$i]}   
+    done
+    
+fi
+
+exit 0
