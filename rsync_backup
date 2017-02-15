@@ -11,43 +11,53 @@ usage() {
 
 #------------------------------------------------------------------------------
 # Set variables
-OPTS=`getopt -o HDWMQYhs:d: \
+NAME=`basename "$0"`
+TODAY=$(date +%Y-%m-%d)
+NOW=$(date +%Y-%m-%dT%H%M)
+
+OPTS=`getopt \
+     -o HDWMQYhs:d:n: \
      --long hourly,daily,weekly,monthly,quarterly,yearly,src:,dst:,max:,help \
-     -n 'parse-options' -- "$@"`
+     -n '$NAME' -- "$@"`
 
 eval set -- "$OPTS"
 
-TODAY=$(date +%Y-%m-%d)
-NOW=$(date +%Y-%m-%dT%H%M%S)
-
+# Interval options (H,D,W,M,Q,Y) are mutually exclusive.
+# Specifying more than one will kill the script.
 while true; do
     case "$1" in
-        -H|--hourly) [ ! -z ${DT+x} ] && die
+        -H|--hourly)
+            [ ! -z ${DT+x} ] && die
             [ -z ${MAX+x} ] && MAX=24
             DT=$NOW
             INC='hour'
             shift ;;
-        -D|--daily) [ ! -z ${DT+x} ] && die
+        -D|--daily)
+            [ ! -z ${DT+x} ] && die
             [ -z ${MAX+x} ] && MAX=7
             DT=$TODAY            
             INC='day'
             shift ;;
-        -W|--weekly) [ ! -z ${DT+x} ] && die
+        -W|--weekly) 
+            [ ! -z ${DT+x} ] && die
             [ -z ${MAX+x} ] && MAX=4
             DT=$TODAY
             INC='week'
             shift ;;
-        -M|--monthly) [ ! -z ${DT+x} ] && die
+        -M|--monthly)
+            [ ! -z ${DT+x} ] && die
             [ -z ${MAX+x} ] && MAX=12
             DT=$TODAY
             INC='month'
             shift ;;
-        -Q|--quarterly) [ ! -z ${DT+x} ] && die
+        -Q|--quarterly)
+            [ ! -z ${DT+x} ] && die
             [ -z ${MAX+x} ] && MAX=4
             DT=$TODAY
             INC='quarter'
             shift ;;
-        -Y|--yearly) [ ! -z ${DT+x} ] && die
+        -Y|--yearly)
+            [ ! -z ${DT+x} ] && die
             [ -z ${MAX+x} ] && MAX=5
             DT=$TODAY
             INC='year'
@@ -55,9 +65,9 @@ while true; do
         -s|--src) SRC_DIR="$2"; shift; shift ;;
         -d|--dst) BKP_DIR="$2"; shift; shift ;;
         -h|--help) usage; exit;; 
-        --max) MAX="$2"; shift; shift ;;
+        -n|--max) MAX="$2"; shift; shift ;;
         -- ) shift; break ;;
-        *) break ;;
+        *) usage; exit ;;
 
     esac
 done
@@ -75,26 +85,25 @@ if [[ -z ${SRC_DIR+x} ]] || [[ -z ${BKP_DIR+x} ]]; then
     exit
 fi
 
-
-#i------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Backup Script
 mkdir -p "$BKP_DIR"
 
 # Get list of current backup folders and count them
-FOLDERS=($(find "$BKP_DIR" -type d -name "$INC*"))
+FOLDERS=($(find "$BKP_DIR" -type d -name "$INC*" | sort ))
 NUM=${#FOLDERS[@]}
 echo "There are currently" $NUM "backups"
 
 # Copy (using hardlinks) the latest backup into todays backup
 if [ $NUM -gt 0 ]; then
-    echo "Copy" ${FOLDERS[$[$NUM-1]]} "-->" "$BKP_DIR"/$INC.$DT
-    cp -al ${FOLDERS[$[$NUM-1]]} "$BKP_DIR"/$INC.$DT
+    if [[ ${FOLDERS[$[$NUM-1]]} != "$BKP_DIR"/$INC.$DT ]]; then
+        cp -al ${FOLDERS[$[$NUM-1]]} "$BKP_DIR"/$INC.$DT
+    fi
 fi
 
 mkdir -p "$BKP_DIR"/$INC.$DT
 
 # rsync into todays backup
-echo "rsync -av --delete" $SRC_DIR/ "$BKP_DIR"/$INC.$DT
 rsync -av --delete $SRC_DIR/ "$BKP_DIR"/$INC.$DT
 
 # Keep the most recent MAX backups and delete the rest
@@ -103,8 +112,7 @@ if [ $(($NUM+1)) -gt $MAX ]; then
     for i in `seq 0 $[$NUM-$MAX]`; do
         echo "removing backup:" ${FOLDERS[$i]}
         rm -r ${FOLDERS[$i]}   
-    done
-    
+    done  
 fi
 
 exit 0
