@@ -1,3 +1,4 @@
 [submodule "ghi"]
 	path = ghi
 	url = git@github.com:cgiacofei/ghi.git
+	branch = master
