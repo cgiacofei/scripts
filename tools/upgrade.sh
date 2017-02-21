@@ -22,8 +22,8 @@ else
 fi
 
 printf "${BLUE}%s${NORMAL}\n" "Updating Scripts."
-cd "$ZSH"
-if git pull --rebase --stat origin master
+cd "$HOME/.scripts"
+if git pull --rebase --stat origin master && git submodule update --init --recursive
 then
     printf '%s' "$GREEN"
     printf '%s\n' '  ______________________________________________________________'
