@@ -1,0 +1,10 @@
+#! /bin/bash
+
+
+if pgrep -fl $1 | grep -v "app_check" > /dev/null; then
+  echo "${1} Running"
+else
+  echo "`date -u +"%Y-%m-%d %H:%M:%S"` ${1} not running, restarting." >> ~/logs/$1.log
+  $1 
+fi
+
