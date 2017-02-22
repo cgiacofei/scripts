@@ -1,6 +1,6 @@
 #! /bin/bash
 
-BIN="app_check rsync_backup ghi/ghi binary/ncdu"
+BIN="app_check rsync_backup ghi/ghi binary/ncdu binary/Image-ExifTool/exiftool photo.sh"
 
 echo --- Linking Scripts ---
 for exe in $BIN; do
