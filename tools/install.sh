@@ -13,6 +13,6 @@ git submodule sync --recursive
 
 echo --- Linking Scripts ---
 for exe in $BIN; do
-    echo Linking $HOME/.scripts/$exe --> $HOME/bin/$(basename $exe)
+    echo "Linking $HOME/.scripts/$exe --> $HOME/bin/$(basename $exe)"
     ln -sf  $HOME/.scripts/$exe $HOME/bin/$(basename $exe)
 done
