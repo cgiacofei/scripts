@@ -23,7 +23,7 @@ fi
 
 printf "${BLUE}%s${NORMAL}\n" "Updating Scripts."
 cd "$HOME/.scripts"
-if git pull --rebase --stat origin master && git submodule update --init --recursive
+if git pull --rebase --stat origin master
 then
     printf '%s' "$GREEN"
     printf '%s\n' '  ______________________________________________________________'
