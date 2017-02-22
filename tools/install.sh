@@ -2,7 +2,9 @@
 
 # Clone script repo into temp directory
 if git clone --recursive --depth=1 https://github.com/cgiacofei/scripts.git $HOME/.scripts ; then
-   echo Repository successfully cloned. 
+    echo Repository successfully cloned. 
+    cd $HOME/.scripts
+    git submodule sync --recursive
 fi
 
 cd $HOME/.scripts
