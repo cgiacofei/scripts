@@ -1,6 +1,6 @@
 #! /bin/bash
 
-EXE=$HOME/bin/exiftool
+EXE=$HOME/.scripts/binary/Image-ExifTool/exiftool
 CHRIS_INPUT=$HOME/files/photos/chris-camera
 CARRIE_INPUT=$HOME/files/photos/carrie-camera
 
