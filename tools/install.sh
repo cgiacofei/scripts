@@ -1,6 +1,6 @@
 #! /bin/bash
 
-BIN="rsync_backup ghi/ghi"
+BIN="app_check rsync_backup ghi/ghi"
 
 # Clone script repo into temp directory
 if ! git clone --recursive --depth=1 https://github.com/cgiacofei/scripts.git $HOME/.scripts ; then
