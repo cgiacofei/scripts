@@ -2,3 +2,7 @@
 	path = ghi
 	url = git@github.com:cgiacofei/ghi.git
 	branch = master
+[submodule "todo"]
+	path = todo
+	url = git@github.com:cgiacofei/todo.txt-cli.git
+	branch = master
